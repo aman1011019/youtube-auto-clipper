@@ -40,3 +40,21 @@ def callback(state:str,code:str):
     path=_token_path(); path.parent.mkdir(parents=True,exist_ok=True)
     path.write_bytes(_cipher().encrypt(flow.credentials.to_json().encode()))
     return RedirectResponse(os.getenv("FRONTEND_ORIGIN","http://localhost:5173").split(",")[0]+"/?youtube=connected")
+
+@router.get("/auth/youtube/my-videos")
+def my_videos(max_results:int=25):
+    from googleapiclient.discovery import build
+    from ..services.youtube import _load_credentials
+    yt=build("youtube","v3",credentials=_load_credentials(),cache_discovery=False)
+    channel=yt.channels().list(part="snippet,contentDetails",mine=True).execute()
+    if not channel.get("items"): return {"items":[]}
+    ch=channel["items"][0]
+    playlist=ch["contentDetails"]["relatedPlaylists"]["uploads"]
+    response=yt.playlistItems().list(part="snippet,contentDetails",playlistId=playlist,maxResults=min(max_results,50)).execute()
+    items=[]
+    for item in response.get("items",[]):
+        video_id=item["contentDetails"].get("videoId")
+        snippet=item.get("snippet",{})
+        if video_id:
+            items.append({"title":snippet.get("title","Untitled video"),"creator":snippet.get("channelTitle",ch["snippet"]["title"]),"url":"https://www.youtube.com/watch?v="+video_id,"published_at":snippet.get("publishedAt")})
+    return {"channel":ch["snippet"].get("title","My channel"),"items":items}
