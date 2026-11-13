@@ -8,3 +8,4 @@ faster-whisper==1.1.1
 google-api-python-client==2.166.0
 google-auth-oauthlib==1.2.1
 cryptography==44.0.2
+psycopg[binary]==3.2.6
