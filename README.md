@@ -6,8 +6,9 @@ Permission-first AI-assisted YouTube Shorts workspace. Manage owned/licensed vid
 1. Copy `.env.example` to `.env` and replace `APP_ADMIN_KEY` with a long random secret. The dashboard asks for this key when you open it.
 2. Generate a token encryption key: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`; put it in `GOOGLE_TOKEN_ENCRYPTION_KEY`.
 3. Create an OAuth 2.0 Web application in Google Cloud. Enable YouTube Data API v3. Add `http://localhost:8000/api/auth/youtube/callback` as an authorized redirect URI and fill `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
-4. Run `docker compose up --build`.
-5. Open http://localhost:5173 and enter `APP_ADMIN_KEY`. For your channel, connect YouTube in Publishing and use **Import my uploads** in Sources; for other creators, add a source URL only after securing permission. Upload the authorized original media file, generate clips, review/approve them, then upload approved clips from Publishing.
+4. Set `YOUTUBE_API_KEY` in `.env` to activate topic-based popular-video discovery (optional).
+5. Run `docker compose up --build`.
+6. Open http://localhost:5173 and enter `APP_ADMIN_KEY`. For your channel, connect YouTube in Publishing and use **Import my uploads** in Sources; for other creators, add a source URL only after securing permission. Upload the authorized original media file, generate clips, review/approve them, then upload approved clips from Publishing.
 
 Frontend: http://localhost:5173 · API docs: http://localhost:8000/docs
 
