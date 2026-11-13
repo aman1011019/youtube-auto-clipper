@@ -62,3 +62,25 @@ def remove_source(sid:int,db:Session=Depends(get_db)):
     if not x: raise HTTPException(404,"Source not found")
     db.delete(x)
     db.commit()
+
+@router.get("/sources/discover")
+def discover_popular_videos(q:str,max_results:int=10):
+    """Search high-view-count public video metadata only. This does not download or grant reuse rights."""
+    import os
+    from fastapi import Query
+    from googleapiclient.discovery import build
+    query=q.strip()
+    if len(query)<2: raise HTTPException(422,"Search query must contain at least two characters")
+    api_key=os.getenv("YOUTUBE_API_KEY")
+    if not api_key: raise HTTPException(503,"Set YOUTUBE_API_KEY to enable popular-video discovery")
+    try:
+        yt=build("youtube","v3",developerKey=api_key,cache_discovery=False)
+        response=yt.search().list(part="snippet",q=query,type="video",order="viewCount",maxResults=max(1,min(max_results,10)),safeSearch="moderate").execute()
+        ids=[item["id"]["videoId"] for item in response.get("items",[]) if item.get("id",{}).get("videoId")]
+        stats={}
+        if ids:
+            details=yt.videos().list(part="statistics",id=",".join(ids)).execute()
+            stats={item["id"]:int(item.get("statistics",{}).get("viewCount",0)) for item in details.get("items",[])}
+        return {"items":[{"title":item["snippet"]["title"],"creator":item["snippet"]["channelTitle"],"channel_id":item["snippet"]["channelId"],"url":"https://www.youtube.com/watch?v="+item["id"]["videoId"],"view_count":stats.get(item["id"]["videoId"],0),"thumbnail":item["snippet"].get("thumbnails",{}).get("medium",{}).get("url","")} for item in response.get("items",[]) if item.get("id",{}).get("videoId")]}
+    except Exception as exc:
+        raise HTTPException(502,"YouTube discovery failed: "+type(exc).__name__)
