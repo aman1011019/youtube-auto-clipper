@@ -3,13 +3,15 @@
 Permission-first AI-assisted YouTube Shorts workspace. Manage owned/licensed video sources, upload authorized media, transcribe with faster-whisper, rank highlight windows, render vertical MP4 clips with FFmpeg, review drafts and publish approved Shorts to YouTube.
 
 ## Quick start (Docker)
-1. Copy `.env.example` to `.env`.
+1. Copy `.env.example` to `.env` and replace `APP_ADMIN_KEY` with a long random secret. The dashboard asks for this key when you open it.
 2. Generate a token encryption key: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`; put it in `GOOGLE_TOKEN_ENCRYPTION_KEY`.
 3. Create an OAuth 2.0 Web application in Google Cloud. Enable YouTube Data API v3. Add `http://localhost:8000/api/auth/youtube/callback` as an authorized redirect URI and fill `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
 4. Run `docker compose up --build`.
 5. Open http://localhost:5173. Add a source, confirm rights, upload its authorized local video file, generate clips, review/approve them, then connect YouTube in Publishing and upload approved clips.
 
 Frontend: http://localhost:5173 · API docs: http://localhost:8000/docs
+
+The workspace API is protected by `APP_ADMIN_KEY`. The YouTube OAuth callback is exempt so Google can complete the redirect; all other application API calls require the workspace key.
 
 ## Local development
 Backend: `cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload`
