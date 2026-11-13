@@ -10,7 +10,7 @@ app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,a
 @app.middleware("http")
 async def protect_workspace(request:Request,call_next):
     path=request.url.path
-    if path in {"/api/health","/api/auth/youtube/callback","/docs","/openapi.json","/redoc"}:
+    if request.method=="OPTIONS" or path in {"/api/health","/api/auth/youtube/callback","/docs","/openapi.json","/redoc"}:
         return await call_next(request)
     expected=os.getenv("APP_ADMIN_KEY","")
     if not expected:
