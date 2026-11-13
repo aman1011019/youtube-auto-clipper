@@ -1,4 +1,6 @@
+from pathlib import Path
 from fastapi import APIRouter,Depends,HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import get_db
@@ -23,6 +25,13 @@ def generate(p:GenerateRequest,db:Session=Depends(get_db)):
     except SQLAlchemyError:
         db.rollback(); raise HTTPException(500,"Could not save generated clips")
     return rows
+@router.get("/clips/{cid}/media")
+def preview_media(cid:int,db:Session=Depends(get_db)):
+    clip=db.get(Clip,cid)
+    if not clip: raise HTTPException(404,"Clip not found")
+    path=Path(clip.video_path or "")
+    if not path.is_file(): raise HTTPException(404,"Rendered video not found")
+    return FileResponse(path,media_type="video/mp4",filename=path.name)
 @router.patch("/clips/{cid}",response_model=ClipOut)
 def update_clip(cid:int,p:ClipUpdate,db:Session=Depends(get_db)):
     clip=db.get(Clip,cid)
